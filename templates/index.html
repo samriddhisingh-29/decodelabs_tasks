@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Tracker — Manage Your Spending</title>
+    <!-- Google Fonts for modern typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Link to custom CSS stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <!-- Header Section -->
+        <header class="app-header">
+            <div class="header-icon">💰</div>
+            <div>
+                <h1>Expense Tracker</h1>
+                <p class="subtitle">A simple, beginner-friendly way to track your daily spending</p>
+            </div>
+        </header>
+
+        <!-- Flash Messages (Alerts for errors and success messages) -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="alerts-container">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">
+                            <span class="alert-icon">
+                                {% if category == 'error' %}⚠️
+                                {% elif category == 'success' %}✅
+                                {% else %}ℹ️{% endif %}
+                            </span>
+                            <span class="alert-text">{{ message }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Dashboard Summary Cards -->
+        <section class="summary-grid">
+            <div class="summary-card total-card">
+                <span class="card-label">Total Spent</span>
+                <span class="card-value" id="total-spent-display">${{ "%.2f"|format(total_spent) }}</span>
+                <span class="card-hint">Calculated dynamically</span>
+            </div>
+
+            <div class="summary-card count-card">
+                <span class="card-label">Total Entries</span>
+                <span class="card-value">{{ expenses|length }}</span>
+                <span class="card-hint">Items recorded</span>
+            </div>
+        </section>
+
+        <!-- Main Card: Add Expense Form -->
+        <section class="card form-card">
+            <h2 class="card-title">Add New Expense</h2>
+            <form action="{{ url_for('add_expense') }}" method="POST" class="expense-form">
+                <div class="form-row">
+                    <!-- Optional Description Input -->
+                    <div class="form-group flex-2">
+                        <label for="title">Description / Note <span class="optional-tag">(Optional)</span></label>
+                        <input 
+                            type="text" 
+                            id="title" 
+                            name="title" 
+                            placeholder="e.g., Grocery shopping, Coffee, Books..."
+                            autocomplete="off"
+                        >
+                    </div>
+
+                    <!-- Required Amount Input -->
+                    <div class="form-group flex-1">
+                        <label for="amount">Amount ($) <span class="required-tag">*</span></label>
+                        <div class="input-with-symbol">
+                            <span class="currency-symbol">$</span>
+                            <input 
+                                type="text" 
+                                id="amount" 
+                                name="amount" 
+                                placeholder="0.00" 
+                                inputmode="decimal"
+                                required
+                                autofocus
+                            >
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <span>➕</span> Add Expense
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <!-- Main Card: Expense List & History -->
+        <section class="card list-card">
+            <div class="list-header">
+                <div>
+                    <h2 class="card-title">Expense History</h2>
+                    <span class="badge">{{ expenses|length }} {% if expenses|length == 1 %}entry{% else %}entries{% endif %}</span>
+                </div>
+
+                <!-- Clear All Button Form (Shown only if there are expenses) -->
+                {% if expenses %}
+                <form action="{{ url_for('clear_expenses') }}" method="POST" onsubmit="return confirm('Are you sure you want to clear all expenses? This will reset your total to $0.00.');">
+                    <button type="submit" class="btn btn-danger-outline" title="Clear all expenses">
+                        <span>🗑️</span> Clear All
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+
+            <!-- Expense List Display -->
+            {% if expenses %}
+                <ul class="expense-items">
+                    {% for item in expenses|reverse %}
+                        <li class="expense-item">
+                            <div class="expense-info">
+                                <span class="expense-title">{{ item.title }}</span>
+                                <span class="expense-date">{{ item.date }}</span>
+                            </div>
+
+                            <div class="expense-actions">
+                                <span class="expense-amount">-${{ "%.2f"|format(item.amount) }}</span>
+                                <!-- Individual Delete Button -->
+                                <form action="{{ url_for('delete_expense', expense_id=item.id) }}" method="POST" class="delete-form">
+                                    <button type="submit" class="btn-delete" title="Delete this entry">✕</button>
+                                </form>
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <!-- Empty State Message -->
+                <div class="empty-state">
+                    <div class="empty-icon">📝</div>
+                    <h3>No expenses added yet</h3>
+                    <p>Enter an expense amount above and click <strong>"Add Expense"</strong> to begin tracking your spending.</p>
+                </div>
+            {% endif %}
+        </section>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <p>Simple Beginner-Friendly Expense Tracker • Built with Python Flask, HTML & CSS</p>
+        </footer>
+
+    </div>
+
+</body>
+</html>
