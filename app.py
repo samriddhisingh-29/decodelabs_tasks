@@ -9,6 +9,7 @@ No database or external services required.
 import importlib.util
 import os
 import pkgutil
+import re
 import sys
 import threading
 import webbrowser
@@ -102,7 +103,7 @@ def handle_add_expense():
     title = (request.form.get("title") or request.form.get("description") or "").strip()
 
     # Sanitize currency symbols and commas (e.g., "$25.50" -> "25.50")
-    cleaned_amount = raw_amount.lstrip("$€£₹").replace(",", "").strip()
+    cleaned_amount = re.sub(r"^[^\d.]+", "", raw_amount).replace(",", "").strip()
 
     # 1. Validation: Check for empty input
     if not cleaned_amount:
@@ -124,7 +125,7 @@ def handle_add_expense():
         title = f"Expense #{len(current_expenses) + 1}"
 
     # Formatted timestamp for display
-    current_time = datetime.now().strftime("%b %d, %Y • %I:%M %p")
+    current_time = datetime.now().strftime("%b %d, %Y - %I:%M %p")
 
     # Create new expense record
     new_expense = {
@@ -172,16 +173,16 @@ def open_browser():
 
 
 if __name__ == "__main__":
-    # Print a clear, helpful banner in the terminal
+    # Clean ASCII banner (safe on all Windows consoles without UnicodeEncodeError)
     print("\n" + "=" * 60)
-    print("💰 EXPENSE TRACKER IS LIVE AND RUNNING!")
-    print("🌐 Website URL: http://127.0.0.1:5000")
-    print("👉 Opening your web browser automatically...")
-    print("   (If it doesn't open, open Chrome/Edge and go to http://127.0.0.1:5000)")
-    print("⏹️  To stop the server at any time, press CTRL+C in this window")
+    print("EXPENSE TRACKER IS LIVE AND RUNNING!")
+    print("Website URL: http://127.0.0.1:5000")
+    print("Opening your web browser automatically...")
+    print("   (If it doesn't open, visit: http://127.0.0.1:5000)")
+    print("To stop the server at any time, press CTRL+C")
     print("=" * 60 + "\n")
 
-    # Automatically launch browser after 1.2 seconds so the server is ready
+    # Automatically launch browser after 1.2 seconds so server is ready
     threading.Timer(1.2, open_browser).start()
 
     # Run Flask server (use_reloader=False prevents restarting or opening browser twice)
